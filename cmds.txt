@@ -1,0 +1,23 @@
+Ping uses the ECHO_REQUEST from the ICMP protocol to obtain an ECHO_RESPONSE.
+Les datagrammes ECHO_REQUEST contiennent un header IP, un header ICMP, une struct timeval
+et un nombre arbitraire d'octets pour bourrer (remplir) le paquet
+
+ICMP = Internet Control Message Protocol
+
+| Type ICMP | Nom du type | Code | Description |
+|-----------|-------------|------|-------------|
+|   8       |ECHO_REQUEST |   0  | Ping reseau |
+
+Header de l'ICMP:
+Octets | Description
+  0-7  |    Type
+  8-15 |    Code
+ 16-31 | Somme de controle
+ 32-64 | Information du header
+
+Code precise quel device (0: destination, 1: hote, 3: port)
+Somme de controle garanti l'exactitude des informations. Se fait de la meme maniere que
+	autres protocols (IP, UDP, TCP)
+Les donnes ICMP sont structurees differemment suivant le type de l'instance de declenchement
+
+
