@@ -20,4 +20,17 @@ Somme de controle garanti l'exactitude des informations. Se fait de la meme mani
 	autres protocols (IP, UDP, TCP)
 Les donnes ICMP sont structurees differemment suivant le type de l'instance de declenchement
 
+ping -v => Sortie verbeuse
+ping -V => Afficher le numero de version
+
+In the main sending loop:
+	1/ Set ttl option to a value in TTL socket => limit num of hops packet can make
+	2/ Set the timeout of recv function. If not set => loop infinite pending loop
+	3/ Fill up the icmp packet:
+	   |---	a/ Set packet type to ICMP_ECHO
+	   |---	b/ set id to pid of process
+	   |---	c/ Fill msg part randomly
+	   |---	d/ Calculate checksun and fill checksum field
+	   |---	e/ Send packet
+	   |---	f/ Wait for the answer and check for the type in header
 
