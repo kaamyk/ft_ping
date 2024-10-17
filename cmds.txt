@@ -4,9 +4,19 @@ et un nombre arbitraire d'octets pour bourrer (remplir) le paquet
 
 ICMP = Internet Control Message Protocol
 
+		Usefull ICMP Message (in our case)
+|----------------------------------------------|
 | Type ICMP | Nom du type | Code | Description |
 |-----------|-------------|------|-------------|
-|   8       |ECHO_REQUEST |   0  | Ping reseau |
+|     8     |ECHO_REQUEST |   0  | Ping reseau |
+|-----------|-------------|------|-------------|
+|     3     |  ERR_CODE   |0 - 15|Message Error|
+|-----------|-------------|------|-------------|
+|    11     |ECHO_REQUEST |0 - 1 |   Timeout   |
+|----------------------------------------------|
+
+Note :
+	Type 3 Code 2/3 can close a TCP connexion
 
 Header de l'ICMP:
 Octets | Description
@@ -33,4 +43,61 @@ In the main sending loop:
 	   |---	d/ Calculate checksun and fill checksum field
 	   |---	e/ Send packet
 	   |---	f/ Wait for the answer and check for the type in header
+
+OSI model => Open systems Intercommunication
+Norme de communication de tous les systemes informatique en reseau.
+Modele de communication, decrivant les fonctionnalites de communication et l'organisation.
+
+Modele fonctionnant en couche:
+					| Application
+	Couche haute	| Presentation
+					| Session
+					| Transport
+---------------------------
+					| Reseau
+  Couche materielle | Liaison
+					| Physique
+
+Description:
+	Physique: Effective transmission of signals. Service limited to emission and reception 
+	|	of a bit or serie of continuous bits.
+	Liaison: Gere les communication de deux machines directement connectees entre elles.
+	Reseau: communications proche en proche. Routage et addressage des paquets.
+	Transport: Gere communications de bout en bout entre processus.
+	Session: Synchonise les ehcange et transactions. Ouvre et ferme les sessions.
+	Presentation: Code les donnees applicatives( conversion donnes applicatives => chaines d'octets transmises).
+	Application: Points d'acces aux services reseaux. Pas de service propre.
+
+
+Le protocole ICMP = couche reseau (3) du model OSI. (Comme le protocole IP).
+IP ne permet pas l'envoi de messages d'erreurs, on lui associe donc ICMP pour controler les controler.
+L' ICMP fait partie d'un paquet IP.
+
+Raw sockets:
+	Used to receive and send packets, bypassignt the normal TCP/IP.
+	The packets are directly transmitted to socket interface from Ethernet Layer.
+	Stream socket only exchange data: no headers, no IP or MAC address.
+	Raw sockets receives unextracted packets, no need to provide port or IP address 
+		to it (unlike case stramd or datagram sockets).
+
+DNS:
+	Domain Name system: Gives an IP address a domain name to be more friendly.
+	In some cases it is usefull to reverse the domain name, more precisely the host name: Reverse DNS lookup.
+	rDNS: request that reverses the domain and host name of an IP address. Need the internet 
+	|	address to have a PTR-record that points the name and permits a invert request in the DNS.
+	How it works:
+		search in the whole DNS for the IP address would be too long
+		So the rDNS is configured with a proper domain in in-addr.arpa(IPV4) with 3 sub-domains. Permits resolving the
+		|	address with max 3 steps.
+		- sub-domain rDNS 1: first component of the IP address
+		- sub-domain rDNS 2: second
+		- sub-domain rDNS 3: third
+		Each component of the IP address is inverted. 192.0.2.x => 2.0.192.in-addr.arpa
+
+
+Usefull C functions:
+	gethostbyname() => Converts human readable website and retuens a structure type hostent containing IP 
+	|	address in binary dot form and address type.
+	Raw socket => socket(, RAW_SOCKET, );
+
 
