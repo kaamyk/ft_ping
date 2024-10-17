@@ -15,6 +15,7 @@
 								//	struct addrinfo { see man getaddrinfo() };
 								//	struct hostent{ see man gethostbyname() };
 								//	getnameinfo();
+								//	+ Macros
 
 # include <arpa/inet.h>			//	const char *inet_ntop(int af, const void *restrict src,
 								//							char dst[restrict .size], socklent_t size);
