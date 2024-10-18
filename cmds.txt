@@ -122,3 +122,15 @@ Ping output:
 			The value return is the starting value - number router.
 	ping statistics => Summary. Total number of packets sent, received and lost.
 	Approximate RTT => minimum, average, maximum RTT 
+
+
+
+Checksum:
+	Algorithm:
+		Also called Longitudinal Redundancy Check: the data must be devided insto transmission blocks, to which additional
+		check data is added.
+		Pseudo code:
+			lrc := 0
+			for each byte b in the buffer do
+				lrc := (lrc + b) and 0xFF
+			lrc := (((lrc XOR 0xFF) + 1) and 0xFF)
