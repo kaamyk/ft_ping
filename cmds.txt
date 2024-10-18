@@ -10,9 +10,9 @@ ICMP = Internet Control Message Protocol
 |-----------|-------------|------|-------------|
 |     8     |ECHO_REQUEST |   0  | Ping reseau |
 |-----------|-------------|------|-------------|
-|     3     |  ERR_CODE   |0 - 15|Message Error|
+|     3     |Dest unaccess|0 - 15|Message Error|
 |-----------|-------------|------|-------------|
-|    11     |ECHO_REQUEST |0 - 1 |   Timeout   |
+|    11     |   Timeout   |0 - 1 |   Timeout   |
 |----------------------------------------------|
 
 Note :
@@ -101,3 +101,24 @@ Usefull C functions:
 	Raw socket => socket(, RAW_SOCKET, );
 
 
+Ping output:
+	Pinging google.com [142.251.214.142] with 32 bytes of data:
+	Reply from 142.251.214.142: bytes=32 time=15ms TTL=58
+	Reply from 142.251.214.142: bytes=32 time=13ms TTL=58
+	Reply from 142.251.214.142: bytes=32 time=15ms TTL=58
+	Reply from 142.251.214.142: bytes=32 time=15ms TTL=58
+
+	Ping statistics for 142.251.214.142:
+		Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+	Approximate round trip times in milli-seconds:
+		Minimum = 13ms, Maximum = 15ms, Average = 14ms
+
+	Pinging => State the host. Shows domain name and IP address.
+	Reply from => followed by IP address IF success.
+					ELSE if not received within a certain timeframe: Request timed out.
+	bytes => size of the ICMP packet received. generally same size than the one sent.
+	time => Round-Time Trip (RTT). Time for the ICMP packet to reach and return to the source.
+	TTL => Time to live. Each router decrease the ttl by one. The base value is 255.
+			The value return is the starting value - number router.
+	ping statistics => Summary. Total number of packets sent, received and lost.
+	Approximate RTT => minimum, average, maximum RTT 

@@ -1,41 +1,45 @@
 #include "../inc/ft_ping.h"
 
-struct hostent	*dns_lookup( char *name )
+char	*dns_lookup( char *name )
 {
 	struct addrinfo	hints;
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
-	hints.ai_socktype = SOCK_STREAM; //SOCK_RAW;
+	hints.ai_socktype = SOCK_DGRAM; //SOCK_RAW;
 
 	struct addrinfo	*res;
-	int				status = 0;
-
-	status = getaddrinfo(name, NULL, &hints, &res);
+	int				status = getaddrinfo(name, NULL, &hints, &res);
 	if (status != 0)
 	{
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(status));
 		return (NULL);
 	}
 
-	if (res == NULL)
+	char	*addr = malloc(INET_ADDRSTRLEN * sizeof(char));
+	if (addr == NULL)
 	{
-		printf(">> res == NULL << \n");
+		fprintf(stderr, "Fatal Error: Allocation error\n");
+		return (NULL);
 	}
+	// printf("ai_flags: %d | ai_family: %d | ai_socktype: %d\n", res->ai_flags, res->ai_family, res->ai_socktype);
+	// printf("ai_cannoname: [%s]\n", res->ai_canonname);
+	
+	struct sockaddr_in *ipv4 = (struct sockaddr_in *)res->ai_addr;
+	const char *tmp_s = inet_ntop(res->ai_family, &(ipv4->sin_addr), addr, INET_ADDRSTRLEN);
+	if (tmp_s == NULL)
+	{
+		fprintf(stderr, "inet_ntop error: %s\n", strerror(errno));
+	}
+	printf("addr: [%s]\n", addr);
 
-	struct addrinfo	*p;
-	void	*addr;
-	char	ipstr[INET_ADDRSTRLEN];
-	p = res;
-	while (p)
-	{
-		// struct sockaddr_in	*tmp = (struct sockaddr_in *)p->ai_addr;
-		struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
-		addr = &(ipv4->sin_addr);
-		// printf("addr: [%s]\n", p->ai_addr->sa_data);
-		printf("addr:[%s]\n", inet_ntop(p->ai_family, addr, ipstr, sizeof(ipstr)));
-		p = p->ai_next;
-	}
-	return (NULL);
+	printf("sin_family: [%d] | sin_port: [%d]\n", ipv4->sin_family, ipv4->sin_port);
+
+	return (addr);
+}
+
+char	*reverse_dns_lookup( char *addr )
+{
+	
 }
 
 int	main( int argc, char **argv )
@@ -56,7 +60,7 @@ int	main( int argc, char **argv )
 
 	//	Checking if argument is valid
 	( void )argv;
-	struct hostent	*addr = dns_lookup(argv[1]);
+	char *addr = dns_lookup(argv[1]);
 	(void) addr;
 	return (0);
 }
