@@ -1,13 +1,13 @@
 #include "../inc/ft_ping.h"
 
-extern uint8_t looping;
+extern uint8_t g_looping;
 
 void	sig_handler( int signum )
 {
 	if (signum == SIGINT)
 	{
 		printf("> Signal SIGINT <");
-		looping = 0;
+		g_looping = 0;
 	}
 }
 

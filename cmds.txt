@@ -134,3 +134,23 @@ Checksum:
 			for each byte b in the buffer do
 				lrc := (lrc + b) and 0xFF
 			lrc := (((lrc XOR 0xFF) + 1) and 0xFF)
+
+
+Size of Ping packet:
+	The default ping size can vary depending on the operating system:
+		Windows: The default ping size is 32 bytes.
+		Linux and macOS: The default ping size is 64 bytes.
+	You can always specify a different packet size using the -l option in Windows or the -s option in Linux/macOS when using the ping command.
+
+
+Ping core functions:
+	ssize_t sendto(int socket, const void *mess, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t dest_len);
+	ssize_t recvfrom(int socket, void *restrict buffer, size_t length, int flags, struct sockaddr *restrict address, socklen_t *restrict len);
+
+	socket = socket defined by socket();
+	const void *mess = le packet struct packet (hdr + mess)
+	flags = 0
+
+	buffer = char[];
+	flags = 0
+	address = NULL ptr || ptr to a struct sockaddr where soending addr will be stored

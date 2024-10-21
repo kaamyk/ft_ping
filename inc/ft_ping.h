@@ -5,9 +5,12 @@
 # include <netinet/ip_icmp.h>	//	struct icmphdr{}; + Macros
 
 # include <sys/socket.h>		//	socket();
-								//	sendto(int socket, const void *mess, size_t len, int flags,
+								//	ssize_t sendto(int socket, const void *mess, size_t len, int flags,
 								//			const struct sockaddr *dest_addr, socklen_t dest_len);
-								//	getnameinfo(); 
+								//	ssize_t recvfrom(int socket, void *restrict buffer, size_t length,
+								//				int flags, struct sockaddr *restrict address, 
+								//				socklen_t *restrict len);
+								//	getnameinfo();
 
 # include <sys/types.h>			//	struct addrinfo{ see man getaddrinfo() };
 
@@ -33,12 +36,29 @@
 # include <netinet/in.h>
 # include <errno.h>
 # include <signal.h>
+# include <time.h>
+# include <stdbool.h>
+
+# define RECV_TIMEOUT	1
+# define ICMP_HEADER_SIZE	8
+# define ICMP_PAYLOAD_SIZE	56
+# define ICMP_PACKET_SIZE	64
+# define IP_PACKET_SIZE		84
+
+//	FLAGS
+# define VERBOSE 1
 
 typedef struct	packet_t
 {
 	struct icmphdr	hdr;
-	char	*msg;
+	char	*msg[ICMP_PAYLOAD_SIZE];
 }				packet_s;
+
+typedef struct	data_t
+{
+	char	*hostname;
+	char	*ip_addr;
+}				data_s;
 
 void	sig_handler( int signum );
 void	ignore_quit( void );

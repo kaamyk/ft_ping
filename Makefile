@@ -2,7 +2,7 @@ NAME	=	ft_ping
 
 CC		=	gcc
 
-CC_FLAGS =	-Wall -Wextra -Werror -g
+CC_FLAGS =	-Wall -Wextra -Werror -g3
 
 SRCDIR	=	src
 SRCS	=	$(SRCDIR)/main.c	$(SRCDIR)/signal.c
