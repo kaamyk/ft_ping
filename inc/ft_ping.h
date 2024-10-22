@@ -10,6 +10,8 @@
 								//	ssize_t recvfrom(int socket, void *restrict buffer, size_t length,
 								//				int flags, struct sockaddr *restrict address, 
 								//				socklen_t *restrict len);
+								//	setsockopt(int socket, int level, int option_name, const void *option_value,
+								//				socklen_t option_len);
 								//	getnameinfo();
 
 # include <sys/types.h>			//	struct addrinfo{ see man getaddrinfo() };
@@ -44,6 +46,7 @@
 # define ICMP_PAYLOAD_SIZE	56
 # define ICMP_PACKET_SIZE	64
 # define IP_PACKET_SIZE		84
+# define TTL_DEFAULT		64
 
 //	FLAGS
 # define VERBOSE 1
@@ -51,11 +54,12 @@
 typedef struct	packet_t
 {
 	struct icmphdr	hdr;
-	char	*msg[ICMP_PAYLOAD_SIZE];
+	char	*msg[ICMP_PACKET_SIZE - sizeof(struct icmphdr)];
 }				packet_s;
 
 typedef struct	data_t
 {
+	char	*parameter;
 	char	*hostname;
 	char	*ip_addr;
 }				data_s;
