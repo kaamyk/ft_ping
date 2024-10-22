@@ -127,7 +127,7 @@ bool	send_ping( int *sockfd, struct sockaddr_in *to, struct sockaddr_in *from, d
 	(void) from;
 	char		r_buf[84];
 	unsigned int	msg_sent = 0;
-	int ttl = 48;//TTL_DEFAULT;		       /* max =	255 */
+	int ttl = 255;//TTL_DEFAULT;		       /* max =	255 */
 	ssize_t		ret = 0;
 	// socklen_t	socklen = 0;
 	struct timespec	t_start,
@@ -140,13 +140,13 @@ bool	send_ping( int *sockfd, struct sockaddr_in *to, struct sockaddr_in *from, d
 	memset(packet.msg, '0', ICMP_PAYLOAD_SIZE - 2);
 	packet.msg[ICMP_PAYLOAD_SIZE - 1] = 0;
 
-	if (setsockopt(*sockfd, SOL_SOCKET, RECV_TIMEOUT, &tv_out, sizeof(tv_out)) == -1)
-	{
-		fprintf(stderr, "ft_ping: setsockopt: %s\n", strerror(errno));
-	}
 	if (setsockopt(*sockfd, SOL_IP, IP_TTL, &ttl, sizeof(ttl)) == -1)
 	{
 		fprintf(stderr, "ft_ping: setsockopt1: %s\n", strerror(errno));
+	}
+	if (setsockopt(*sockfd, SOL_SOCKET, RECV_TIMEOUT, &tv_out, sizeof(tv_out)) == -1)
+	{
+		fprintf(stderr, "ft_ping: setsockopt: %s\n", strerror(errno));
 	}
 
 	while (g_looping)
@@ -174,9 +174,9 @@ bool	send_ping( int *sockfd, struct sockaddr_in *to, struct sockaddr_in *from, d
 		}
 		clock_gettime(CLOCK_MONOTONIC, &t_end);
 		struct iphdr	*r_ip = (struct iphdr *) r_buf;
-		// printf(">> ttl = %d\n", r_icmp->ttl);
-		printf("%d bytes from %s (%s): icmp_seq=%d ttl=%d time=%ld ms\n", 
-					ICMP_PACKET_SIZE, utils->hostname, utils->ip_addr, msg_sent, r_ip->ttl, (t_end.tv_sec - t_start.tv_sec) * 1000 + ((t_end.tv_nsec - t_start.tv_nsec) / 1000));
+		struct icmphdr	*r_icmp = (struct icmphdr *) r_buf + sizeof(struct iphdr);
+		printf("%ld bytes from %s (%s): icmp_seq=%d ttl=%d time=%ld ms\n", 
+				ret - sizeof(struct iphdr), utils->hostname, utils->ip_addr, htons(r_icmp->un.echo.sequence), r_ip->ttl, (t_end.tv_sec - t_start.tv_sec) * 1000 + ((t_end.tv_nsec - t_start.tv_nsec) / 1000));
 		sleep(1);
 	}
 
@@ -216,7 +216,12 @@ int	main ( int argc, char **argv )
 
 	printf("FT_PING %s (%s) %d(%d) bytes of data.\n", utils.parameter, utils.ip_addr, ICMP_PAYLOAD_SIZE, IP_PACKET_SIZE);
 
-	int	sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+	struct protoent	*proto = getprotobyname("icmp");
+	if (proto == NULL)
+	{
+		fprintf(stderr, "ft_ping: getprotobyname: %s\n", strerror(errno));
+	}
+	int	sockfd = socket(AF_INET, SOCK_RAW, proto->p_proto);
 	if (sockfd == -1)
 	{
 		fprintf(stderr, "ping: socket: %s\n", strerror(errno));
