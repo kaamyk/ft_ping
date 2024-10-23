@@ -5,7 +5,7 @@ CC		=	gcc
 CC_FLAGS =	-Wall -Wextra -Werror -g3
 
 SRCDIR	=	src
-SRCS	=	$(SRCDIR)/main.c	$(SRCDIR)/signal.c
+SRCS	=	$(SRCDIR)/main.c	$(SRCDIR)/signal.c	$(SRCDIR)/print.c
 
 OBJDIR	=	.obj
 OBJS	=	$(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SRCS))

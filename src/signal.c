@@ -1,7 +1,5 @@
 #include "../inc/ft_ping.h"
 
-extern uint8_t g_looping;
-
 void	sig_handler( int signum )
 {
 	if (signum == SIGINT)
@@ -26,6 +24,7 @@ void	set_signal( void )
 	ignore_quit();
 	memset(&sig, 0, sizeof(sig));
 	sigemptyset(&sig.sa_mask);
+	sig.sa_flags = 0;
 	sig.sa_handler = &sig_handler;
 	sigaction(SIGINT, &sig, NULL);
 }

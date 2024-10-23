@@ -2,6 +2,7 @@
 # define FT_PING_H
 
 //	Lib specific to project
+#include <bits/types/struct_timeval.h>
 # include <netinet/ip_icmp.h>	//	struct icmphdr{}; + Macros
 
 # include <sys/socket.h>		//	socket();
@@ -59,13 +60,25 @@ typedef struct	packet_t
 
 typedef struct	data_t
 {
-	char	*parameter;
-	char	*hostname;
-	char	*ip_addr;
+	char	*parameter,
+			*hostname,
+			*ip_addr;
+	unsigned int	msg_sent,
+					msg_recv;
+	struct timeval	t_start,
+					t_end,
+					t_min,
+					t_max;
 }				data_s;
 
+extern bool g_looping;
+extern int	g_flags;
+
+//		SIGNAL.C
 void	sig_handler( int signum );
 void	ignore_quit( void );
 void	set_signal( void );
 
+//		PRINT.C
+void	print_end( data_s *utils );
 #endif
