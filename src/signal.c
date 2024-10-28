@@ -4,7 +4,6 @@ void	sig_handler( int signum )
 {
 	if (signum == SIGINT)
 	{
-		printf("> Signal SIGINT <");
 		g_looping = 0;
 	}
 }
