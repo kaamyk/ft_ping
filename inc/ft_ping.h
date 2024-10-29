@@ -16,6 +16,8 @@
 
 # include <sys/types.h>			//	struct addrinfo{ see man getaddrinfo() };
 
+# include <sys/time.h>			//	struct timespec { time_t tv_sec; suseconds_t tv_nsec };
+
 # include <netdb.h>				//	struct hostent *gethostbyname(const char* name);
 								//	int getaddrinfo(const char *restrict node, const char *restrict service,
 								//				struct addrinfo *restrict hints, struct addrinfo **restrict res);
@@ -23,8 +25,6 @@
 								//	struct hostent{ see man gethostbyname() };
 								//	getnameinfo();
 								//	+ Macros
-
-# include <sys/time.h>			//	struct timeval { time_t tv_sec; suseconds_t tv_usec };
 
 # include <arpa/inet.h>			//	const char *inet_ntop(int af, const void *restrict src,
 								//							char dst[restrict .size], socklent_t size);
@@ -65,7 +65,7 @@ typedef struct	data_t
 	double	times_ms_list[500];
 	unsigned int	msg_sent,
 					msg_recv;
-	struct timeval	t_begin,
+	struct timespec	t_begin,
 					t_finish,
 					t_start,
 					t_end,
@@ -85,7 +85,7 @@ void	set_signal( void );
 void	print_end( data_s *utils );
 
 //		UTILS.C
-double	get_time_in_ms( struct timeval *time );
-void	init_values( data_s *utils );
-void	end_program( data_s *utils, int *sockfd );
+double	get_time_in_ms( struct timespec *time );
+bool	init_values( struct sockaddr_in **to, data_s *utils );
+void	end_program( data_s *utils, int *sockfd, struct sockaddr_in *to );
 #endif

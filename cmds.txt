@@ -1,5 +1,5 @@
 Ping uses the ECHO_REQUEST from the ICMP protocol to obtain an ECHO_RESPONSE.
-Les datagrammes ECHO_REQUEST contiennent un header IP, un header ICMP, une struct timeval
+Les datagrammes ECHO_REQUEST contiennent un header IP, un header ICMP, une struct timespec
 et un nombre arbitraire d'octets pour bourrer (remplir) le paquet
 
 ICMP = Internet Control Message Protocol

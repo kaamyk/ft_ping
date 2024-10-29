@@ -11,7 +11,7 @@ void	sig_handler( int signum )
 void	ignore_quit( void )
 {
 	struct sigaction	ign;
-	memset(&ign, 0, sizeof(ign));
+	memset(&ign, 0, sizeof(struct sigaction));
 	ign.sa_handler = SIG_IGN;
 	sigaction (SIGQUIT, &ign, NULL);
 }
@@ -21,7 +21,7 @@ void	set_signal( void )
 	struct sigaction	sig;
 
 	ignore_quit();
-	memset(&sig, 0, sizeof(sig));
+	memset(&sig, 0, sizeof(struct sigaction));
 	sigemptyset(&sig.sa_mask);
 	sig.sa_flags = 0;
 	sig.sa_handler = &sig_handler;

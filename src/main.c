@@ -82,26 +82,35 @@ bool	reverse_dns_lookup( char *ip_addr, data_s *utils )
 
 bool	dns_lookup( char *addr, struct sockaddr_in *to, data_s *utils )
 {
-	struct addrinfo	*res = NULL;
-	struct addrinfo	hints;
+	struct addrinfo		*res = NULL,
+						hints;
+
+	memset(&hints, 0, sizeof(struct addrinfo));
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_RAW;
 	
 	int status = getaddrinfo(addr, NULL, &hints, &res);
 	if (status != 0)
 	{
-		fprintf(stderr, "ping: %s: %s\n", addr, gai_strerror(status));
+		fprintf(stderr, "ft_ping: %s: %s\n", addr, gai_strerror(status));
 		return (1);
 	}
 	utils->parameter = strdup(addr);
+	if (utils->parameter == NULL)
+	{
+		fprintf(stderr, "ft_ping: strdup: %s\n", strerror(errno));
+		return (1);
+	}
 	utils->ip_addr = malloc(INET_ADDRSTRLEN);
 	if (utils->ip_addr == NULL)
 	{
-		fprintf(stderr, "ping: malloc: %s\n", strerror(errno));
+		fprintf(stderr, "ft_ping: malloc: %s\n", strerror(errno));
 		free(res);
 		return (1);
 	}
-	to = (struct sockaddr_in *) res->ai_addr;
+	to->sin_family = AF_INET;
+	to->sin_port = htons(0);
+	to->sin_addr = ((struct sockaddr_in *)(res->ai_addr))->sin_addr;
 	const char	*tmp = inet_ntop(res->ai_family, &(to->sin_addr), utils->ip_addr, INET_ADDRSTRLEN);
 	if (tmp == NULL)
 	{
@@ -114,39 +123,39 @@ bool	dns_lookup( char *addr, struct sockaddr_in *to, data_s *utils )
 	return (0);
 }
 
-void	update_time( data_s *utils, struct timeval **times)
+void	update_time( data_s *utils, struct timespec **times)
 {
 	double	times_elapsed_ms = 0,
 			tmp_min = get_time_in_ms(&(utils->t_min)),
 			tmp_max = get_time_in_ms(&(utils->t_max));
 	
-	times[2]->tv_usec = times[1]->tv_usec - times[0]->tv_usec;
+	times[2]->tv_nsec = times[1]->tv_nsec - times[0]->tv_nsec;
 	times[2]->tv_sec = times[1]->tv_sec - times[0]->tv_sec;
 	times_elapsed_ms = get_time_in_ms(times[2]);
 	utils->times_ms_list[utils->msg_sent] = times_elapsed_ms;
 
-	if (utils->t_min.tv_sec == 0.0f && utils->t_min.tv_usec == 0.0f)
+	if (utils->t_min.tv_sec == 0.0f && utils->t_min.tv_nsec == 0.0f)
 	{
 		utils->t_min.tv_sec = times[2]->tv_sec;
-		utils->t_min.tv_usec = times[2]->tv_usec;
+		utils->t_min.tv_nsec = times[2]->tv_nsec;
 
 		utils->t_max.tv_sec = times[2]->tv_sec;
-		utils->t_max.tv_usec = times[2]->tv_usec;
+		utils->t_max.tv_nsec = times[2]->tv_nsec;
 
 		utils->t_begin.tv_sec = times[0]->tv_sec;
-		utils->t_begin.tv_usec = times[0]->tv_usec;
+		utils->t_begin.tv_nsec = times[0]->tv_nsec;
 	}
 	else
 	{	
 		if (times_elapsed_ms < tmp_min)
 		{
 			utils->t_min.tv_sec = times[1]->tv_sec - times[0]->tv_sec;
-			utils->t_min.tv_usec = times[1]->tv_usec - times[0]->tv_usec;
+			utils->t_min.tv_nsec = times[1]->tv_nsec - times[0]->tv_nsec;
 		}
 		else if (times_elapsed_ms > tmp_max)
 		{
 			utils->t_max.tv_sec = times[1]->tv_sec - times[0]->tv_sec;
-			utils->t_max.tv_usec = times[1]->tv_usec - times[0]->tv_usec;
+			utils->t_max.tv_nsec = times[1]->tv_nsec - times[0]->tv_nsec;
 		}
 	}
 }
@@ -154,24 +163,19 @@ void	update_time( data_s *utils, struct timeval **times)
 bool	set_up_socket( int *sockfd )
 {
 	int 	ttl = 64;
-	struct timeval	timeout;
+	struct timespec	timeout;
 
-	timeout.tv_sec = 1;
-	timeout.tv_usec = 0;
+	timeout.tv_sec = 2;
+	timeout.tv_nsec = 0;
 
 	if (setsockopt(*sockfd, SOL_IP, IP_TTL, &ttl, sizeof(ttl)) == -1)
 	{
-		fprintf(stderr, "ft_ping: setsockopt1: %s\n", strerror(errno));
+		fprintf(stderr, "ft_ping: setsockopt(SOL_IP): %s\n", strerror(errno));
 		return (1);
 	}
-	if (setsockopt(*sockfd, SOL_IP, IP_RECVTTL, &ttl, sizeof(ttl)) == -1)
+	if (setsockopt(*sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(struct timespec)) == -1)
 	{
-		fprintf(stderr, "ft_ping: setsockopt1: %s\n", strerror(errno));
-		return (1);
-	}
-	if (setsockopt(*sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(struct timeval)) == -1)
-	{
-		fprintf(stderr, "ft_ping: setsockopt: %s\n", strerror(errno));
+		fprintf(stderr, "ft_ping: setsockopt(SOL_SOCKET): %s\n", strerror(errno));
 		return (1);
 	}
 	return (0);
@@ -179,19 +183,45 @@ bool	set_up_socket( int *sockfd )
 
 void	init_packet( packet_s *packet )
 {
+	memset(packet, 0, sizeof(packet_s));
 	packet->hdr.type = ICMP_ECHO;
 	packet->hdr.code = 8;
 	packet->hdr.un.echo.id = getpid();
 	packet->hdr.un.echo.sequence = 0;
-	memset(packet->msg, '0', ICMP_PAYLOAD_SIZE - 2);
-	packet->msg[ICMP_PAYLOAD_SIZE - 1] = 0;
+	memset(packet->msg, '0', sizeof(packet->msg) - 2);
+	packet->msg[sizeof(packet->msg) - 1] = 0;
+}
+
+bool	init_clocks( struct timespec **times )
+{
+	for (uint8_t i = 0; i < 3; i++)
+	{
+		times[i] = malloc(sizeof(struct timespec));
+		if (times[i] == NULL)
+		{
+			fprintf(stderr, "ft_ping: init_clocks: %s\n", strerror(errno));
+			return (1);
+		}
+	}
+	return (0);
+}
+
+void	free_clocks( struct timespec **times)
+{
+	uint8_t	i = 0;
+	while (i < 3 && *(times + i) != NULL)
+	{
+		free(*(times + i));
+		i++;
+	}
 }
 
 bool	send_ping( int *sockfd, struct sockaddr_in *to, data_s *utils )
 {
 	char	r_buf[84];
 	ssize_t	ret = 0;
-	struct timeval	*times[3];	// 0: start, 1: end, 2: elapsed
+	struct timespec	*times[3];	// 0: start, 1: end, 2: elapsed
+	init_clocks(times);
 	struct iphdr	*r_ip = NULL;
 	struct icmphdr	*r_icmp = NULL;
 	packet_s	packet;
@@ -201,14 +231,13 @@ bool	send_ping( int *sockfd, struct sockaddr_in *to, data_s *utils )
 		fprintf(stderr, "ft_ping: init_packet: initialization failed.");
 		return (1);
 	}
-
-	if (set_up_socket(sockfd))
-		return (1);
-
+	
 	while (g_looping)
 	{
-		packet.hdr.checksum = checksum(&packet, sizeof(packet));
-		gettimeofday(times[0], NULL);
+		init_packet(&packet);
+		packet.hdr.un.echo.sequence = htons(utils->msg_sent);
+		packet.hdr.checksum = checksum(&packet, sizeof(packet_s));
+		clock_gettime(CLOCK_MONOTONIC, times[0]);
 		ret = sendto(*sockfd, &packet, sizeof(packet_s), 0, (struct sockaddr *) to, sizeof(struct sockaddr));
 		if (ret == -1)
 		{
@@ -216,35 +245,39 @@ bool	send_ping( int *sockfd, struct sockaddr_in *to, data_s *utils )
 			sleep(1);
 			continue ;
 		}
-		ret = recvfrom(*sockfd, r_buf, IP_PACKET_SIZE, 0, NULL, NULL);
+		printf("utils->hostname: [%s] | utils->ip_addr: [%s]\n", utils->hostname, utils->ip_addr);
+		ret = recvfrom(*sockfd, r_buf, 84, 0, NULL, NULL);
 		if (ret == -1)
+		{
 			fprintf(stderr, "ping: recvfrom: %s\n", strerror(errno));
-		gettimeofday(times[1], NULL);
+			free_clocks(times);
+			return (1);
+		}
+		clock_gettime(CLOCK_MONOTONIC, times[1]);
 		r_ip = (struct iphdr *) r_buf;
 		r_icmp = (struct icmphdr *) r_buf + sizeof(struct iphdr);
-		if (r_icmp->un.echo.id == 0)
-		{
-			printf("r_icmp.id == 0\n");
-		}
+		printf("r_icmp->type == %d | r_icmp->().id == %d\n",r_icmp->type , r_icmp->un.echo.id);
 		update_time(utils, times);
 		printf("%ld bytes from %s: icmp_seq=%d ttl=%d time=%.2f ms\n", 
 				ret - sizeof(struct iphdr), utils->ip_addr, utils->msg_sent, r_ip->ttl, get_time_in_ms(times[2]));
 		packet.hdr.un.echo.sequence = (utils->msg_sent)++;
 		sleep(1);
-		if (utils->msg_sent == 2)
-			exit(0);
+		// if (utils->msg_sent == 2)
+		// 	exit(0);
 	}
-	gettimeofday(&(utils->t_finish), NULL);
+	clock_gettime(CLOCK_MONOTONIC, &(utils->t_finish));
 	print_end(utils);
+	free_clocks(times);
 	return (0);
 }
 
 int	main ( int argc, char **argv )
 {
 	int	exit_value = 0;
-	struct sockaddr_in	to;
+	struct sockaddr_in	*to = NULL;
 	data_s	utils;	
-	init_values(&utils);
+	if (init_values(&to, &utils) == 1)
+		exit (1);	
 	
 	set_signal();
 
@@ -254,7 +287,7 @@ int	main ( int argc, char **argv )
 	if (exit_value != 0)
 		exit(exit_value);
 
-	exit_value = dns_lookup(argv[0], &to, &utils);
+	exit_value = dns_lookup(argv[0], to, &utils);
 	if (exit_value != 0)
 		exit (exit_value);
 
@@ -264,34 +297,24 @@ int	main ( int argc, char **argv )
 
 	printf("FT_PING %s (%s): %d data bytes\n", utils.parameter, utils.ip_addr, ICMP_PAYLOAD_SIZE);
 
-
-	// struct protoent	*protocol = getprotobyname("icmp");
-	// if (protocol == NULL)
-	// {
-	// 	fprintf(stderr, "ft_ping: getprotobyname: %s\n", strerror(errno));
-	// 	end_program(&utils, NULL);
-	// 	exit (1);
-	// }
-	// if (protocol->p_proto != IPPROTO_ICMP)
-	// {
-	// 	printf(" >> protocol->p_proto != IPPROTO_ICMP <<\n");
-	// }
 	int	sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
 	if (sockfd == -1)
 	{
 		fprintf(stderr, "ft_ping: socket: %s\n", strerror(errno));
-		end_program(&utils, &sockfd);
+		end_program(&utils, &sockfd, to);
 		exit(1);	
 	}
+	if (set_up_socket(&sockfd))
+		return (1);
 
-	exit_value = send_ping(&sockfd, &to, &utils);
+	exit_value = send_ping(&sockfd, to, &utils);
 	if (exit_value != 0)
 	{
-		end_program(&utils, &sockfd);
+		end_program(&utils, &sockfd, to);
 		exit (1);
 	}
 
-	end_program(&utils, &sockfd);
+	end_program(&utils, &sockfd, to);
 	close(sockfd);
 	
 	return (0);

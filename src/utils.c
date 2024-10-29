@@ -1,18 +1,25 @@
 #include "../inc/ft_ping.h"
 
-double	get_time_in_ms( struct timeval *time )
+double	get_time_in_ms( struct timespec *time )
 {
 	double	res = 0;
 
 	res = time->tv_sec * 1000000;
-	res += time->tv_usec;
+	res += time->tv_nsec;
 	res /= 1000;
 
 	return (res);
 }
 
-void	init_values( data_s *utils )
+bool	init_values( struct sockaddr_in **to, data_s *utils )
 {
+	*to = calloc(1, sizeof(struct sockaddr_in));
+	if (*to == NULL)
+	{
+		fprintf(stderr, "ft_ping: malloc: %s\n", strerror(errno));
+		return (1);
+	}
+	
 	utils->parameter = NULL;
 	utils->hostname = NULL;
 	utils->ip_addr = NULL;
@@ -26,19 +33,21 @@ void	init_values( data_s *utils )
 	}
 
 	utils->t_start.tv_sec = 0;
-	utils->t_start.tv_usec = 0;
+	utils->t_start.tv_nsec = 0;
 	
 	utils->t_end.tv_sec = 0;
-	utils->t_end.tv_usec = 0;
+	utils->t_end.tv_nsec = 0;
 	
 	utils->t_min.tv_sec = 0;
-	utils->t_min.tv_usec = 0;
+	utils->t_min.tv_nsec = 0;
 
 	utils->t_max.tv_sec = 0;
-	utils->t_max.tv_usec = 0;
+	utils->t_max.tv_nsec = 0;
+
+	return (0);
 }
 
-void	end_program( data_s *utils, int *sockfd )
+void	end_program( data_s *utils, int *sockfd, struct sockaddr_in *to )
 {
 	if (utils != NULL)
 	{
@@ -49,5 +58,7 @@ void	end_program( data_s *utils, int *sockfd )
 		if (utils->ip_addr != NULL)
 			free(utils->ip_addr);
 	}
+	if (to != NULL)
+		free(to);
 	close(*sockfd);
 }
