@@ -63,6 +63,7 @@ typedef struct	data_t
 			*hostname,
 			*ip_addr;
 	double	times_ms_list[500];
+	int		ttl;
 	unsigned int	msg_sent,
 					msg_recv;
 	struct timespec	t_begin,
