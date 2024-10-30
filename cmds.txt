@@ -53,7 +53,7 @@ Modele fonctionnant en couche:
 	Couche haute	| Presentation
 					| Session
 					| Transport
----------------------------
+--------------------------------------
 					| Reseau
   Couche materielle | Liaison
 					| Physique

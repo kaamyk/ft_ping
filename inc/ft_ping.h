@@ -54,7 +54,7 @@
 typedef struct	packet_t
 {
 	struct icmphdr	hdr;
-	char	*msg[ICMP_PACKET_SIZE - sizeof(struct icmphdr)];
+	char	msg[ICMP_PACKET_SIZE - sizeof(struct icmphdr)];
 }				packet_s;
 
 typedef struct	data_t
@@ -64,8 +64,9 @@ typedef struct	data_t
 			*ip_addr;
 	double	times_ms_list[500];
 	int		ttl;
-	unsigned int	msg_sent,
-					msg_recv;
+	uint16_t	msg_sent,
+				msg_recv,
+				sequence;
 	struct timespec	t_begin,
 					t_finish,
 					t_start,

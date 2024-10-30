@@ -4,9 +4,9 @@ double	get_time_in_ms( struct timespec *time )
 {
 	double	res = 0;
 
-	res = time->tv_sec * 1000000;
+	res = time->tv_sec * 1000000000;
 	res += time->tv_nsec;
-	res /= 1000;
+	res /= 1000000;
 
 	return (res);
 }
