@@ -132,7 +132,7 @@ void	update_time( data_s *utils, struct timespec **times)
 	times[2]->tv_nsec = times[1]->tv_nsec - times[0]->tv_nsec;
 	times[2]->tv_sec = times[1]->tv_sec - times[0]->tv_sec;
 	times_elapsed_ms = get_time_in_ms(times[2]);
-	utils->times_ms_list[utils->msg_sent] = times_elapsed_ms;
+	(utils->times_ms_list)[utils->msg_sent - 1] = times_elapsed_ms;
 
 	if (utils->t_min.tv_sec == 0.0f && utils->t_min.tv_nsec == 0.0f)
 	{
@@ -231,13 +231,11 @@ bool	send_ping( int *sockfd, struct sockaddr_in *to, data_s *utils )
 	struct iphdr	*r_ip = NULL;
 	struct icmphdr	*r_icmp = NULL;
 	packet_s	packet;
-	init_packet(&packet);
 
 	while (g_looping)
 	{
-		printf(" >>> loop\n");
+		init_packet(&packet);
 		packet.hdr.un.echo.sequence = htons(utils->msg_sent);
-		bzero(&(packet.hdr.checksum), sizeof(uint16_t));
 		packet.hdr.checksum = checksum(&packet, sizeof(packet_s));
 		clock_gettime(CLOCK_MONOTONIC, times[0]);
 		ret = sendto(*sockfd, &packet, sizeof(packet_s), 0, (struct sockaddr *) to, sizeof(struct sockaddr));
@@ -270,7 +268,8 @@ bool	send_ping( int *sockfd, struct sockaddr_in *to, data_s *utils )
 		utils->sequence = ntohs(r_icmp->un.echo.sequence);
 		update_time(utils, times);
 		printf("%ld bytes from %s: icmp_seq=%hu ttl=%d time=%.3f ms\n", 
-				ret - sizeof(struct iphdr), utils->ip_addr, utils->sequence, r_ip->ttl, get_time_in_ms(times[2]));
+				ret - sizeof(struct iphdr), utils->ip_addr, utils->msg_sent, r_ip->ttl, get_time_in_ms(times[2]));
+		sleep(1);
 	}
 	clock_gettime(CLOCK_MONOTONIC, &(utils->t_finish));
 	print_end(utils);

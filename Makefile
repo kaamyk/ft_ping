@@ -19,7 +19,7 @@ $(OBJDIR)/%.o:	$(SRCDIR)/%.c
 all:		$(OBJDIR) $(OBJ) $(NAME)
 
 $(NAME):	 $(OBJDIR) $(OBJS)
-		$(CC) $(CC_FLAGS) $(OBJS) -o $(NAME)
+		$(CC) $(CC_FLAGS) $(OBJS) -lm -o $(NAME)
 
 clean:
 		rm -rf .obj

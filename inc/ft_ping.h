@@ -40,6 +40,7 @@
 # include <signal.h>
 # include <time.h>
 # include <stdbool.h>
+# include <math.h>
 
 # define RECV_TIMEOUT	1
 # define ICMP_HEADER_SIZE	8
@@ -64,9 +65,9 @@ typedef struct	data_t
 			*ip_addr;
 	double	times_ms_list[500];
 	int		ttl;
-	uint16_t	msg_sent,
-				msg_recv,
-				sequence;
+	unsigned short	msg_sent,
+					msg_recv,
+					sequence;
 	struct timespec	t_begin,
 					t_finish,
 					t_start,
