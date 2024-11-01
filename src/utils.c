@@ -20,7 +20,8 @@ bool	init_values( struct sockaddr_in **to, data_s *utils )
 		return (1);
 	}
 	
-	utils->ttl = 64;
+	utils->id = getpid();
+	utils->ttl = TTL_DEFAULT;
 	utils->parameter = NULL;
 	utils->hostname = NULL;
 	utils->ip_addr = NULL;

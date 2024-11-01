@@ -174,7 +174,7 @@ bool	set_up_socket( int *sockfd, data_s *utils )
 		return (1);	
 	}
 
-	if (setsockopt(*sockfd, SOL_IP, IP_TTL, &utils->ttl, sizeof(utils->ttl)) == -1)
+	if (setsockopt(*sockfd, SOL_IP, IP_TTL, &utils->ttl, sizeof(int)) == -1)
 	{
 		fprintf(stderr, "ft_ping: setsockopt(SOL_IP): %s\n", strerror(errno));
 		return (1);
@@ -212,12 +212,12 @@ void	free_clocks( struct timespec **times)
 	}
 }
 
-void	init_packet( packet_s *packet )
+void	init_packet( packet_s *packet, data_s *utils )
 {
 	bzero(packet, sizeof(packet_s));
 	packet->hdr.type = ICMP_ECHO;
 	packet->hdr.code = 0;
-	packet->hdr.un.echo.id = (uint16_t)getpid();
+	packet->hdr.un.echo.id = utils->id;
 	memset(packet->msg, '0', sizeof(packet->msg));
 	packet->msg[sizeof(packet->msg) - 1] = 0;
 }
@@ -234,7 +234,7 @@ bool	send_ping( int *sockfd, struct sockaddr_in *to, data_s *utils )
 
 	while (g_looping)
 	{
-		init_packet(&packet);
+		init_packet(&packet, utils);
 		packet.hdr.un.echo.sequence = htons(utils->msg_sent);
 		packet.hdr.checksum = checksum(&packet, sizeof(packet_s));
 		clock_gettime(CLOCK_MONOTONIC, times[0]);
@@ -302,7 +302,12 @@ int	main ( int argc, char **argv )
 	if (exit_value != 0)
 		exit(exit_value);
 
-	printf("FT_PING %s (%s): %d data bytes\n", utils.parameter, utils.ip_addr, ICMP_PAYLOAD_SIZE);
+	printf("FT_PING %s (%s): %d data bytes", utils.parameter, utils.ip_addr, ICMP_PAYLOAD_SIZE);
+	if ((g_flags & VERBOSE))
+	{
+		printf(", id 0x%x = %d", utils.id, utils.id);
+	}
+	printf("\n");
 
 	int	sockfd = 0;
 	if (set_up_socket(&sockfd, &utils) == 1)

@@ -57,6 +57,6 @@ void	print_end( data_s *utils )
 	time_ms[3] = calc_std_dev(time_ms[1], utils->times_ms_list);
 	// printf("total == %.3f\n", time_ms[3]);
 
-	printf("round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f\n",
+	printf("round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f ms\n",
 			time_ms[0], time_ms[1], time_ms[2], time_ms[3]);
 }

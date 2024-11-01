@@ -46,7 +46,7 @@
 # define ICMP_HEADER_SIZE	8
 # define ICMP_PAYLOAD_SIZE	56
 # define ICMP_PACKET_SIZE	64
-# define IP_PACKET_SIZE		84
+# define IP_PACKET_SIZE		84	
 # define TTL_DEFAULT		64
 
 //	FLAGS
@@ -63,8 +63,9 @@ typedef struct	data_t
 	char	*parameter,
 			*hostname,
 			*ip_addr;
-	double	times_ms_list[500];
 	int		ttl;
+	double	times_ms_list[500];
+	uint16_t	id;
 	unsigned short	msg_sent,
 					msg_recv,
 					sequence;
