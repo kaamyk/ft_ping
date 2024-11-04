@@ -21,8 +21,8 @@ bool	init_values( struct sockaddr_in **to, data_s *utils )
 	}
 	
 	utils->id = getpid();
-	// utils->ttl = 10;
-	utils->ttl = IPDEFTTL;
+	utils->ttl = 3;
+	// utils->ttl = IPDEFTTL;
 	utils->parameter = NULL;
 	utils->hostname = NULL;
 	utils->ip_addr = NULL;

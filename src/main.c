@@ -223,6 +223,25 @@ void	init_packet( packet_s *packet, data_s *utils )
 	packet->msg[sizeof(packet->msg) - 1] = 0;
 }
 
+void	handle_error_packet( data_s *utils, struct icmphdr *err_packet, const ssize_t packet_size )
+{
+	(void)utils;
+	printf("In handle_error_packet()\n");
+	printf("%ld bytes from _gateway (%d): ", packet_size, htons(err_packet->un.gateway));
+	switch (err_packet->code)
+	{
+		// case ICMP_DEST_UNREACH:
+		// 	printf("Time to live exceeded\n");
+		// 	break ;
+		case ICMP_TIME_EXCEEDED:
+			printf("Time to live exceeded\n");
+			break ;
+		default :
+			printf("Unknown error code\n");
+			break ;
+	}
+}
+
 bool	send_ping( int *sockfd, struct sockaddr_in *to, data_s *utils )
 {
 	char	r_buf[84] = {0};
@@ -266,11 +285,17 @@ bool	send_ping( int *sockfd, struct sockaddr_in *to, data_s *utils )
 		utils->msg_recv += 1;
 		r_ip = (struct iphdr *) r_buf;
 		r_icmp = (struct icmphdr *)(r_ip + sizeof(struct iphdr));
+		printf("r_icmp->type == %d\n", r_icmp->type);
+		if (r_icmp->type != ICMP_ECHO)
+		{
+			handle_error_packet(utils, r_icmp, ret - sizeof(struct iphdr));
+			sleep(1);
+			continue ;
+		}
 		utils->sequence = ntohs(r_icmp->un.echo.sequence);
 		update_time(utils, times);
 		printf("%ld bytes from %s: icmp_seq=%hu ttl=%d time=%.3f ms\n", 
 				ret - sizeof(struct iphdr), utils->ip_addr, utils->msg_sent, r_ip->ttl, get_time_in_ms(times[2]));
-		sleep(1);
 	}
 	clock_gettime(CLOCK_MONOTONIC, &(utils->t_finish));
 	print_end(utils);
