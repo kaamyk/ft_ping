@@ -174,7 +174,8 @@ bool	set_up_socket( int *sockfd, data_s *utils )
 		return (1);	
 	}
 
-	if (setsockopt(*sockfd, SOL_IP, IP_TTL, &utils->ttl, sizeof(int)) == -1)
+	printf("utils->ttl == %d\n", utils->ttl);
+	if (setsockopt(*sockfd, SOL_IP, IP_TTL, &(utils->ttl), sizeof(int)) == -1)
 	{
 		fprintf(stderr, "ft_ping: setsockopt(SOL_IP): %s\n", strerror(errno));
 		return (1);

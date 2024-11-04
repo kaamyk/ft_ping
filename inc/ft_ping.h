@@ -46,8 +46,7 @@
 # define ICMP_HEADER_SIZE	8
 # define ICMP_PAYLOAD_SIZE	56
 # define ICMP_PACKET_SIZE	64
-# define IP_PACKET_SIZE		84	
-# define TTL_DEFAULT		64
+# define IP_PACKET_SIZE		84
 
 //	FLAGS
 # define VERBOSE 1

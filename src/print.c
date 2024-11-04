@@ -48,14 +48,9 @@ void	print_end( data_s *utils )
 	printf("--- %s ft_ping statistics ---\n%d packets transmitted, %d packets received, %.3f%% packet loss\n",
 			utils->parameter, utils->msg_sent, utils->msg_recv, pack_lost);
 	time_ms[0] = get_time_in_ms(&(utils->t_min));
-	// printf("t_min == %.3f\n", time_ms[0]);
 	time_ms[1] = calc_average_time(utils->times_ms_list);
-	// printf("t_avg == %.3f\n", time_ms[1]);
 	time_ms[2] = get_time_in_ms(&(utils->t_max));
-	// printf("t_max == %.3f\n", time_ms[2]);
-	// time_ms[3] = get_time_in_ms(&(utils->t_finish)) - get_time_in_ms(&(utils->t_begin));
 	time_ms[3] = calc_std_dev(time_ms[1], utils->times_ms_list);
-	// printf("total == %.3f\n", time_ms[3]);
 
 	printf("round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f ms\n",
 			time_ms[0], time_ms[1], time_ms[2], time_ms[3]);
