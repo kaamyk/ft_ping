@@ -90,5 +90,12 @@ void	print_end( data_s *utils );
 //		UTILS.C
 double	get_time_in_ms( struct timespec *time );
 bool	init_values( struct sockaddr_in **to, data_s *utils );
+bool	init_clocks( struct timespec **times );
+void	free_clocks( struct timespec **times);
+void	update_time( data_s *utils, struct timespec **times);
 void	end_program( data_s *utils, int *sockfd, struct sockaddr_in *to );
+
+//		ERROR.C
+bool	return_error( char *err_mess );
+
 #endif

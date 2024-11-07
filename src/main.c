@@ -39,15 +39,9 @@ bool	parsing( int *argc, char ***argv )
 	if (*argc != 1)
 	{
 		if (*argc < 1)
-		{
-			fprintf(stderr, "ft_ping: usage error: Destination address required\n");
-			return (1);
-		}
+			return_error("ft_ping: usage error: Destination address required");
 		else if (*argc > 1)
-		{
-			fprintf(stderr, "ft_ping: usage error: Only one address required\n");
-			return (1);
-		}
+			return_error("ft_ping: usage error: Only one address required");
 	}
 	return (0);
 }
@@ -63,101 +57,49 @@ bool	reverse_dns_lookup( char *ip_addr, data_s *utils )
 	
 	int ret = getnameinfo((struct sockaddr *) &tmp, len, buf, sizeof(buf), NULL,0, NI_NAMEREQD);
 	if (ret != 0)
-	{
-		fprintf(stderr, "ft_ping: getnameinfo: %s\n", strerror(errno));
-		return(1);
-	}
+		return_error(strcat("ft_ping: getnameinfo: ", strerror(errno)));
 
 	ret_buf = (char *)malloc(strlen(buf) + 1);
 	if (ret_buf == NULL)
-	{
-		fprintf(stderr, "ft_ping: malloc: %s\n", strerror(errno));
-		return (1);
-	}
+		return_error(strcat("ft_ping: malloc: ", strerror(errno)));
 	strcpy(ret_buf, buf);
 	utils->hostname = ret_buf;
 	
 	return (0);
 }
 
-bool	dns_lookup( char *addr, struct sockaddr_in *to, data_s *utils )
+bool	dns_lookup( char *input_addr, struct sockaddr_in *to, data_s *utils )
 {
 	struct addrinfo		*res = NULL,
 						hints;
 
 	memset(&hints, 0, sizeof(struct addrinfo));
 	hints.ai_family = AF_INET;
-	hints.ai_socktype = SOCK_RAW;
+	hints.ai_socktype = SOCK_STREAM;
 	
-	int status = getaddrinfo(addr, NULL, &hints, &res);
+	int status = getaddrinfo(input_addr, NULL, &hints, &res);
 	if (status != 0)
 	{
-		fprintf(stderr, "ft_ping: %s: %s\n", addr, gai_strerror(status));
+		fprintf(stderr, "ft_ping: %s: %s\n", input_addr, gai_strerror(status));
 		return (1);
 	}
-	utils->parameter = strdup(addr);
+	utils->parameter = strdup(input_addr);
 	if (utils->parameter == NULL)
-	{
-		fprintf(stderr, "ft_ping: strdup: %s\n", strerror(errno));
-		return (1);
-	}
-	utils->ip_addr = malloc(INET_ADDRSTRLEN);
-	if (utils->ip_addr == NULL)
-	{
-		fprintf(stderr, "ft_ping: malloc: %s\n", strerror(errno));
-		free(res);
-		return (1);
-	}
+		return_error(strcat("ft_ping: strdup: ", strerror(errno)));
 	to->sin_family = AF_INET;
 	to->sin_port = htons(0);
 	to->sin_addr = ((struct sockaddr_in *)(res->ai_addr))->sin_addr;
-	const char	*tmp = inet_ntop(res->ai_family, &(to->sin_addr), utils->ip_addr, INET_ADDRSTRLEN);
-	if (tmp == NULL)
+	utils->ip_addr = malloc(INET_ADDRSTRLEN);
+	if (utils->ip_addr == NULL)
 	{
-		fprintf(stderr, "ping: inet_ntop: %s\n", strerror(errno));
 		free(res);
-		return (1);
+		return_error(strcat("ft_ping: malloc: ", strerror(errno)));
 	}
-	// printf("to->sin_family: %d | to->sin_port: %d | to->sin_addr.s_addr: %s\n", to->sin_family, to->sin_port, tmp);
+	strcpy(utils->ip_addr, inet_ntoa(to->sin_addr));
+	const char	*tmp = inet_ntop(res->ai_family, &(to->sin_addr), utils->ip_addr, INET_ADDRSTRLEN);
+	printf("to->sin_family: %d | to->sin_port: %d | to->sin_addr.s_addr: %s\n", to->sin_family, to->sin_port, tmp);
 	free(res);
 	return (0);
-}
-
-void	update_time( data_s *utils, struct timespec **times)
-{
-	double	times_elapsed_ms = 0,
-			tmp_min = get_time_in_ms(&(utils->t_min)),
-			tmp_max = get_time_in_ms(&(utils->t_max));
-	
-	times[2]->tv_nsec = times[1]->tv_nsec - times[0]->tv_nsec;
-	times[2]->tv_sec = times[1]->tv_sec - times[0]->tv_sec;
-	times_elapsed_ms = get_time_in_ms(times[2]);
-	(utils->times_ms_list)[utils->msg_sent - 1] = times_elapsed_ms;
-
-	if (utils->t_min.tv_sec == 0.0f && utils->t_min.tv_nsec == 0.0f)
-	{
-		utils->t_min.tv_sec = times[2]->tv_sec;
-		utils->t_min.tv_nsec = times[2]->tv_nsec;
-
-		utils->t_max.tv_sec = times[2]->tv_sec;
-		utils->t_max.tv_nsec = times[2]->tv_nsec;
-
-		utils->t_begin.tv_sec = times[0]->tv_sec;
-		utils->t_begin.tv_nsec = times[0]->tv_nsec;
-	}
-	else
-	{	
-		if (times_elapsed_ms < tmp_min)
-		{
-			utils->t_min.tv_sec = times[1]->tv_sec - times[0]->tv_sec;
-			utils->t_min.tv_nsec = times[1]->tv_nsec - times[0]->tv_nsec;
-		}
-		else if (times_elapsed_ms > tmp_max)
-		{
-			utils->t_max.tv_sec = times[1]->tv_sec - times[0]->tv_sec;
-			utils->t_max.tv_nsec = times[1]->tv_nsec - times[0]->tv_nsec;
-		}
-	}
 }
 
 bool	set_up_socket( int *sockfd, data_s *utils )
@@ -169,48 +111,14 @@ bool	set_up_socket( int *sockfd, data_s *utils )
 
 	*sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
 	if (*sockfd == -1)
-	{
-		fprintf(stderr, "ft_ping: socket: %s\n", strerror(errno));
-		return (1);	
-	}
+		return_error(strcat("ft_ping: socket: ", strerror(errno)));
 
 	printf("utils->ttl == %d\n", utils->ttl);
-	if (setsockopt(*sockfd, SOL_IP, IP_TTL, &(utils->ttl), sizeof(int)) == -1)
-	{
-		fprintf(stderr, "ft_ping: setsockopt(SOL_IP): %s\n", strerror(errno));
-		return (1);
-	}
+	if (setsockopt(*sockfd, SOL_IP, IP_TTL, &(utils->ttl), (socklen_t)sizeof(utils->ttl)) == -1)
+		return_error(strcat("ft_ping: setsockopt(SOL_IP): ", strerror(errno)));
 	if (setsockopt(*sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&timeout, sizeof(timeout)) == -1)
-	{
-		fprintf(stderr, "ft_ping: setsockopt(SOL_SOCKET): %s\n", strerror(errno));
-		return (1);
-	}
+		return_error(strcat("ft_ping: setsockopt(SOL_SOCKET): ", strerror(errno)));
 	return (0);
-}
-
-bool	init_clocks( struct timespec **times )
-{
-	for (uint8_t i = 0; i < 3; i++)
-	{
-		times[i] = malloc(sizeof(struct timespec));
-		if (times[i] == NULL)
-		{
-			fprintf(stderr, "ft_ping: init_clocks: %s\n", strerror(errno));
-			return (1);
-		}
-		memset(times[i], 0, sizeof(struct timespec));
-	}
-	return (0);
-}
-
-void	free_clocks( struct timespec **times)
-{
-	uint8_t	i = 0;
-	while (i < 3 && *(times + i) != NULL)
-	{
-		free(*(times + i));
-		i++;
-	}
 }
 
 void	init_packet( packet_s *packet, data_s *utils )
@@ -223,16 +131,15 @@ void	init_packet( packet_s *packet, data_s *utils )
 	packet->msg[sizeof(packet->msg) - 1] = 0;
 }
 
-void	handle_error_packet( data_s *utils, struct icmphdr *err_packet, const ssize_t packet_size )
+void	handle_error_packet( struct icmphdr *err_packet, const ssize_t packet_size )
 {
-	(void)utils;
 	printf("In handle_error_packet()\n");
 	printf("%ld bytes from _gateway (%d): ", packet_size, htons(err_packet->un.gateway));
 	switch (err_packet->code)
 	{
-		// case ICMP_DEST_UNREACH:
-		// 	printf("Time to live exceeded\n");
-		// 	break ;
+		case ICMP_DEST_UNREACH:
+			printf("Time to live exceeded\n");
+			break ;
 		case ICMP_TIME_EXCEEDED:
 			printf("Time to live exceeded\n");
 			break ;
@@ -279,23 +186,29 @@ bool	send_ping( int *sockfd, struct sockaddr_in *to, data_s *utils )
 				free_clocks(times);
 				return (1);
 			}
+			printf("la\n");
 			continue ;
 		}
 		clock_gettime(CLOCK_MONOTONIC, times[1]);
 		utils->msg_recv += 1;
 		r_ip = (struct iphdr *) r_buf;
-		r_icmp = (struct icmphdr *)(r_ip + sizeof(struct iphdr));
-		printf("r_icmp->type == %d\n", r_icmp->type);
-		if (r_icmp->type != ICMP_ECHO)
+		r_icmp = (struct icmphdr *)(r_buf + sizeof(struct iphdr));
+		
+		printf("> r_icmp->type == %d | r_icmp->code == %d | r_icmp->id == %d <\n", r_icmp->type, r_icmp->code, r_icmp->un.echo.id);
+		if (r_icmp->type != 0)
+			handle_error_packet(r_icmp, ret - sizeof(struct iphdr));
+		else
 		{
-			handle_error_packet(utils, r_icmp, ret - sizeof(struct iphdr));
-			sleep(1);
-			continue ;
+			utils->sequence = ntohs(r_icmp->un.echo.sequence);
+			if (r_icmp->type == ICMP_TIME_EXCEEDED)
+				printf("ICMP_TIME_EXCEEDED\n");
+			else if (r_icmp->type == ICMP_DEST_UNREACH)
+				printf("ICMP_DEST_UNREACH\n");
+			update_time(utils, times);
+			printf("%ld bytes from %s: icmp_seq=%hu ttl=%d time=%.3f ms\n", 
+					ret - sizeof(struct iphdr), utils->ip_addr, utils->msg_sent, r_ip->ttl, get_time_in_ms(times[2]));
 		}
-		utils->sequence = ntohs(r_icmp->un.echo.sequence);
-		update_time(utils, times);
-		printf("%ld bytes from %s: icmp_seq=%hu ttl=%d time=%.3f ms\n", 
-				ret - sizeof(struct iphdr), utils->ip_addr, utils->msg_sent, r_ip->ttl, get_time_in_ms(times[2]));
+		sleep(1);
 	}
 	clock_gettime(CLOCK_MONOTONIC, &(utils->t_finish));
 	print_end(utils);
