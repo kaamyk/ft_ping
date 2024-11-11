@@ -122,5 +122,6 @@ void	end_program( data_s *utils, int *sockfd, struct sockaddr_in *to )
 	}
 	if (to != NULL)
 		free(to);
+	if (sockfd != NULL)
 	close(*sockfd);
 }

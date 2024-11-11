@@ -36,6 +36,7 @@
 # include <unistd.h>
 # include <string.h>
 # include <netinet/in.h>
+# include <netinet/ip.h>
 # include <errno.h>
 # include <signal.h>
 # include <time.h>
@@ -97,5 +98,6 @@ void	end_program( data_s *utils, int *sockfd, struct sockaddr_in *to );
 
 //		ERROR.C
 bool	return_error( char *err_mess );
+bool	handle_error_packet( struct ip *err_ip_packet, struct icmp *err_icmp_packet, const ssize_t ret );
 
 #endif
