@@ -19,33 +19,6 @@ unsigned short checksum(void *b, int len)
 	return result;
 }
 
-bool	parsing( int *argc, char ***argv )
-{
-	while (*argc > 0 && ***argv == '-')
-	{
-		while (***argv)
-		{
-			switch (***argv)
-			{
-				case 'v':
-					g_flags |= VERBOSE;
-					break ;
-			}
-			++(**argv);
-		}
-		--(*argc);
-		++(*argv);
-	}
-	if (*argc != 1)
-	{
-		if (*argc < 1)
-			return_error("ft_ping: usage error: Destination address required");
-		else if (*argc > 1)
-			return_error("ft_ping: usage error: Only one address required");
-	}
-	return (0);
-}
-
 bool	reverse_dns_lookup( char *ip_addr, data_s *utils )
 {
 	int	len = sizeof(struct sockaddr_in);
@@ -171,29 +144,25 @@ bool	send_ping( int *sockfd, struct sockaddr_in *to, data_s *utils )
 			continue ;
 		}
 		clock_gettime(CLOCK_MONOTONIC, times[1]);
-		utils->msg_recv += 1;
 		r_ip = (struct ip *) r_buf;
 		r_icmp = (struct icmp *)(r_buf + sizeof(struct iphdr));
-		// if (r_icmp->icmp_id != utils->id)
-		// {
-		// 	printf("> Note: id diff < \n");
-		// 	printf("\t> ret = %d | utils = %d  < \n", r_icmp->icmp_id, utils->id);
-		// 	continue ;
-		// }
+		char	buf_ip[INET_ADDRSTRLEN] = {0};
+		if (get_str_ip_addr(buf_ip, &r_ip->ip_src) == 1)
+		{
+			free_clocks(times);
+			return (1);
+		}
+		if (strcmp(utils->ip_addr, buf_ip) == 0)
+			utils->msg_recv += 1;
 		
 		if (r_icmp->icmp_type != 0)
 			handle_error_packet(r_ip, r_icmp, r_buf, ret);
 		else
 		{
-			utils->sequence = ntohs(r_icmp->icmp_seq);
-			if (r_icmp->icmp_type == ICMP_TIME_EXCEEDED)
-				printf("ICMP_TIME_EXCEEDED\n");
-			else if (r_icmp->icmp_type == ICMP_DEST_UNREACH)
-				printf("ICMP_DEST_UNREACH\n");
 			update_time(utils, times);
-			printf("%ld bytes from %s: icmp_seq=%hu ttl=%d time=%.3f ms\n", 
-					ret - sizeof(struct iphdr), utils->ip_addr, utils->msg_sent, r_icmp->icmp_lifetime, get_time_in_ms(times[2]));
+			print_sequence( &ret, r_ip, r_icmp, utils, times[2]);
 		}
+
 		sleep(1);
 	}
 	clock_gettime(CLOCK_MONOTONIC, &(utils->t_finish));
@@ -214,7 +183,7 @@ int	main ( int argc, char **argv )
 
 	--argc;
 	++argv;
-	exit_value = parsing(&argc, &argv);
+	exit_value = parsing(&argc, &argv, &utils);
 	if (exit_value != 0)
 	{
 		end_program(&utils, NULL, to);		

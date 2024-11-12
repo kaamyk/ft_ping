@@ -42,6 +42,7 @@
 # include <time.h>
 # include <stdbool.h>
 # include <math.h>
+# include <ctype.h>
 
 # define RECV_TIMEOUT	1
 # define ICMP_HEADER_SIZE	8
@@ -51,6 +52,7 @@
 
 //	FLAGS
 # define VERBOSE 1
+# define TTL 2
 
 typedef struct	packet_t
 {
@@ -63,7 +65,7 @@ typedef struct	data_t
 	char	*parameter,
 			*hostname,
 			*ip_addr;
-	int		ttl;
+	uint8_t		ttl;
 	double	times_ms_list[500];
 	uint16_t	id;
 	unsigned short	msg_sent,
@@ -87,6 +89,7 @@ void	set_signal( void );
 
 //		PRINT.C
 void	print_end( data_s *utils );
+void	print_sequence( ssize_t *ret, struct ip *r_ip, struct icmp *r_icmp, data_s *utils, struct timespec *time_elapsed );
 
 //		UTILS.C
 double	get_time_in_ms( struct timespec *time );
@@ -95,9 +98,15 @@ bool	init_clocks( struct timespec **times );
 void	free_clocks( struct timespec **times);
 void	update_time( data_s *utils, struct timespec **times);
 void	end_program( data_s *utils, int *sockfd, struct sockaddr_in *to );
+bool	get_str_ip_addr( char *ret_buf, const struct in_addr *src_addr );
+bool	check_id ( char *r_buf, data_s *utils, struct ip *r_ip );
 
 //		ERROR.C
 bool	return_error( char *err_mess );
 bool	handle_error_packet( const struct ip *err_ip_packet, const struct icmp *err_icmp_packet, const char *r_buf, const ssize_t ret );
+
+//		PARSING.C
+bool	parsing( int *argc, char ***argv, data_s *utils );
+
 
 #endif

@@ -6,7 +6,7 @@ CC_FLAGS =	-Wall -Wextra -Werror -g3
 
 SRCDIR	=	src
 SRCS	=	$(SRCDIR)/main.c	$(SRCDIR)/signal.c	$(SRCDIR)/print.c	$(SRCDIR)/utils.c \
-			$(SRCDIR)/error.c
+			$(SRCDIR)/error.c	$(SRCDIR)/parsing.c
 OBJDIR	=	.obj
 OBJS	=	$(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SRCS))
 

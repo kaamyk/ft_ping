@@ -21,8 +21,8 @@ bool	init_values( struct sockaddr_in **to, data_s *utils )
 	}
 	
 	utils->id = (uint16_t)getpid();
-	utils->ttl = 3;
-	// utils->ttl = IPDEFTTL;
+	// utils->ttl = 3;
+	utils->ttl = IPDEFTTL;
 	utils->parameter = NULL;
 	utils->hostname = NULL;
 	utils->ip_addr = NULL;
@@ -124,4 +124,13 @@ void	end_program( data_s *utils, int *sockfd, struct sockaddr_in *to )
 		free(to);
 	if (sockfd != NULL)
 	close(*sockfd);
+}
+
+bool	get_str_ip_addr( char *res_buf, const struct in_addr *src_addr )
+{
+	char	buf_ip[INET_ADDRSTRLEN] = {0};
+	if (inet_ntop(AF_INET, &src_addr->s_addr, buf_ip, INET_ADDRSTRLEN) == NULL)
+		return_error("ft_ping: handle_error_packet: inet_ntop");
+	strcpy(res_buf, buf_ip);
+	return (0);
 }

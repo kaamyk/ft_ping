@@ -9,71 +9,13 @@ bool	return_error( char *err_mess )
 	return (1);
 }
 
-
-// bool	reverse_dns_lookup( char *ip_addr, data_s *utils )
-// {
-// 	int	len = sizeof(struct sockaddr_in);
-// 	char	buf[NI_MAXHOST],
-// 			*ret_buf;
-// 	struct sockaddr_in	tmp;
-// 	tmp.sin_family = AF_INET;
-// 	tmp.sin_addr.s_addr = inet_addr(ip_addr);
-	
-// 	int ret = getnameinfo((struct sockaddr *) &tmp, len, buf, sizeof(buf), NULL,0, NI_NAMEREQD);
-// 	if (ret != 0)
-// 		return_error("ft_ping: getnameinfo");
-
-// 	ret_buf = (char *)malloc(strlen(buf) + 1);
-// 	if (ret_buf == NULL)
-// 		return_error("ft_ping: malloc");
-// 	strcpy(ret_buf, buf);
-// 	utils->hostname = ret_buf;
-	
-// 	return (0);
-// }
-
-
-
 bool	get_hostname( char *buf_host , char *ip_addr )
 {
 	struct sockaddr_in	tmp;
 	tmp.sin_family = AF_INET;
 	tmp.sin_addr.s_addr = inet_addr(ip_addr);
-	const int ret_val = getnameinfo((struct sockaddr *) &tmp, sizeof(struct sockaddr_in), buf_host, NI_MAXHOST, NULL, 0, NI_NAMEREQD);
-	if (ret_val != 0)
-	{
-		switch (ret_val)
-		{
-			case EAI_AGAIN:
-				printf("EAI_AGAIN\n");
-				break;
-			case EAI_BADFLAGS:
-				printf("EAI_BADFLAGS\n");
-				break;
-			case EAI_FAIL:
-				printf("EAI_FAIL\n");
-				break;
-			case EAI_FAMILY:
-				printf("EAI_FAMILY\n");
-				break;
-			case EAI_MEMORY:
-				printf("EAI_MEMORY\n");
-				break;
-			case EAI_NONAME:
-				printf("EAI_NONAME\n");
-				break;
-			case EAI_OVERFLOW:
-				printf("EAI_OVERFLOW\n");
-				break;
-			case EAI_SYSTEM:
-				printf("EAI_SYSTEM\n");
-				break;
-			default :
-				printf("default\n");
-				break;
-		}
-		return_error("ft_ping: getnameinfo");
-	}
+	(void)getnameinfo((struct sockaddr *) &tmp, sizeof(struct sockaddr_in), buf_host, NI_MAXHOST, NULL, 0, NI_NAMEREQD);
+
 	return (0);
 }
 
@@ -88,7 +30,7 @@ bool	print_error_verbose( const char *r_buf )
 	for (uint8_t i = 0; i < 10; i++, tmp += 2)
 		fprintf(stderr, "%.02hhx%.02hhx ", tmp[0], tmp[1]);
 
-	char	buf_ip[2][INET_ADDRSTRLEN] = {0};
+	char	buf_ip[2][INET_ADDRSTRLEN] = {0};	// [0]: source, [1]: destination
 	if (inet_ntop(AF_INET, &tmp_ip->ip_src.s_addr, buf_ip[0], INET_ADDRSTRLEN) == NULL)
 		return_error("ft_ping: handle_error_packet: inet_ntop");
 	if (inet_ntop(AF_INET, &tmp_ip->ip_dst.s_addr, buf_ip[1], INET_ADDRSTRLEN) == NULL)
@@ -112,14 +54,14 @@ bool	handle_error_packet( const struct ip *err_ip_packet, const struct icmp *err
 {
 	(void) err_ip_packet;
 	char	buf_ip[INET_ADDRSTRLEN] = {0};
-	if (inet_ntop(AF_INET, &err_ip_packet->ip_src.s_addr, buf_ip, INET_ADDRSTRLEN) == NULL)
-		return_error("ft_ping: handle_error_packet: inet_ntop");	
+	if (get_str_ip_addr(buf_ip, &err_ip_packet->ip_src) == 1)
+		return (1);	
 	
 	char	buf_host[NI_MAXHOST] = {0};
 	if (get_hostname(buf_host, buf_ip) == 1)
 		return (1);
 	
-	fprintf(stderr, "%ld bytes from %s (%s):", 
+	fprintf(stderr, "%ld bytes from %s (%s): ", 
 					ret - sizeof(struct iphdr), buf_host, buf_ip);
 	
 	switch (err_icmp_packet->icmp_type)
@@ -161,6 +103,7 @@ bool	handle_error_packet( const struct ip *err_ip_packet, const struct icmp *err
 			printf("Unknown error code\n");
 			break ;
 	}
-	print_error_verbose(r_buf);
+	if (g_flags & VERBOSE)
+		print_error_verbose(r_buf);
 	return (0);
 }
