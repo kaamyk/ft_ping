@@ -154,9 +154,22 @@ bool	send_ping( int *sockfd, struct sockaddr_in *to, data_s *utils )
 		}
 		if (strcmp(utils->ip_addr, buf_ip) == 0)
 			utils->msg_recv += 1;
-		
+
 		if (r_icmp->icmp_type != 0)
+		{
+			if (get_str_ip_addr(buf_ip, &r_ip->ip_src) == 1)
+			{
+				free_clocks(times);
+				return (1);	
+			}
+			if (check_id(r_buf, utils, r_ip) == 1)
+			{
+				free_clocks(times);
+				fprintf(stderr, "ft_ping: check_id: IDs do not match.\n");
+				return (1);
+			}	
 			handle_error_packet(r_ip, r_icmp, r_buf, ret);
+		}
 		else
 		{
 			update_time(utils, times);

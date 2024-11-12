@@ -52,14 +52,14 @@ bool	print_error_verbose( const char *r_buf )
  
 bool	handle_error_packet( const struct ip *err_ip_packet, const struct icmp *err_icmp_packet, const char *r_buf, const ssize_t ret )
 {
-	(void) err_ip_packet;
 	char	buf_ip[INET_ADDRSTRLEN] = {0};
 	if (get_str_ip_addr(buf_ip, &err_ip_packet->ip_src) == 1)
 		return (1);	
-	
+
 	char	buf_host[NI_MAXHOST] = {0};
 	if (get_hostname(buf_host, buf_ip) == 1)
 		return (1);
+
 	
 	fprintf(stderr, "%ld bytes from %s (%s): ", 
 					ret - sizeof(struct iphdr), buf_host, buf_ip);

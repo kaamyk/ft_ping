@@ -134,3 +134,11 @@ bool	get_str_ip_addr( char *res_buf, const struct in_addr *src_addr )
 	strcpy(res_buf, buf_ip);
 	return (0);
 }
+
+bool	check_id ( char *r_buf, data_s *utils, struct ip *r_ip )
+{
+	uint8_t	len = (r_ip->ip_hl * 4) + sizeof(struct icmphdr *) + (r_ip->ip_hl * 4);
+	struct icmp	*r_cp_icmp = (struct icmp *)(r_buf + len);
+
+	return (utils->id == r_cp_icmp->icmp_id ? 0 : 1);
+}
