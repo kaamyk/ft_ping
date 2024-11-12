@@ -96,8 +96,7 @@ bool	dns_lookup( char *input_addr, struct sockaddr_in *to, data_s *utils )
 		return_error("ft_ping: malloc");
 	}
 	strcpy(utils->ip_addr, inet_ntoa(to->sin_addr));
-	const char	*tmp = inet_ntop(res->ai_family, &(to->sin_addr), utils->ip_addr, INET_ADDRSTRLEN);
-	printf("to->sin_family: %d | to->sin_port: %d | to->sin_addr.s_addr: %s\n", to->sin_family, to->sin_port, tmp);
+	// const char	*tmp = inet_ntop(res->ai_family, &(to->sin_addr), utils->ip_addr, INET_ADDRSTRLEN);
 	free(res);
 	return (0);
 }
@@ -183,7 +182,7 @@ bool	send_ping( int *sockfd, struct sockaddr_in *to, data_s *utils )
 		// }
 		
 		if (r_icmp->icmp_type != 0)
-			handle_error_packet(r_ip, r_icmp, ret);
+			handle_error_packet(r_ip, r_icmp, r_buf, ret);
 		else
 		{
 			utils->sequence = ntohs(r_icmp->icmp_seq);
