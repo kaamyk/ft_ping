@@ -45,7 +45,7 @@ bool	print_error_verbose( const char *r_buf )
 	//	fprintf(icmp);
 	struct icmp	*tmp_icmp = (struct icmp *)(r_buf + len - 8);
 	fprintf(stderr, "ICMP: type %hhu, code %hhu, size %d, id 0x%x, seq 0x%04x\n", 
-					tmp_icmp->icmp_type, tmp_icmp->icmp_code, ICMP_PACKET_SIZE, tmp_icmp->icmp_id, tmp_icmp->icmp_seq);
+					tmp_icmp->icmp_type, tmp_icmp->icmp_code, ICMP_PACKET_SIZE, tmp_icmp->icmp_id, htons(tmp_icmp->icmp_seq));
 
 	return (0);
 }
@@ -60,9 +60,7 @@ bool	handle_error_packet( const struct ip *err_ip_packet, const struct icmp *err
 	if (get_hostname(buf_host, buf_ip) == 1)
 		return (1);
 
-	
-	fprintf(stderr, "%ld bytes from %s (%s): ", 
-					ret - sizeof(struct iphdr), buf_host, buf_ip);
+	fprintf(stderr, "%ld bytes from %s: ", ret - 8, buf_ip);
 	
 	switch (err_icmp_packet->icmp_type)
 	{

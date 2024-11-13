@@ -8,7 +8,7 @@ bool	parsing_flags( char *flag )
 			g_flags |= VERBOSE;
 			break ;
 		default:
-			fprintf(stderr, "ft_ping: parsing: invalid flag\n");
+			fprintf(stderr, "ft_ping: parsing: %s: invalid flag\n", flag);
 			return (1);
 	}
 	return (0);
@@ -33,19 +33,23 @@ bool	parsing_arguments( int *argc, char ***argv, data_s *utils )
 			g_flags |= TTL;
 			++(*argv);
 			--(*argc);
+			if (**argv == NULL)
+			{
+				fprintf(stderr, "ft_ping: ttl: no value.\n");
+				return (1);
+			}
 			for (uint8_t i = 0; (**argv)[i] != '\0'; i++)
 			{
 				if (isdigit((**argv)[i]) == 0)
 				{
-					fprintf(stderr, "**argv[i] == %c\n", (**argv)[i]);
-					fprintf(stderr, "ft_ping: parsing: ttl: value must be a positive numeric value.\n");
+					fprintf(stderr, "ft_ping: ttl: %s: value must be a positive numeric value.\n", **argv);
 					return (1);
 				}
 			}
 			utils->ttl = atoi(**argv);
 			break ;
 		default:
-			fprintf(stderr, "ft_ping: parsing: invalid flag\n");
+			fprintf(stderr, "ft_ping: parsing: %s: invalid argument\n", **argv);
 			return (1);
 	}
 	return (0);
@@ -71,12 +75,10 @@ bool	parsing( int *argc, char ***argv, data_s *utils )
 	}
 	if (*argc != 1)
 	{
-		fprintf(stderr, "argc == %d\n", *argc);
-		fprintf(stderr, "**argv == [%s]\n", **argv);
 		if (*argc < 1)
-			return_error("ft_ping: usage error: Destination address required");
+			return (return_error("ft_ping: usage error: missing host operand"));
 		else if (*argc > 1)
-			return_error("ft_ping: usage error: Only one address required");
+			return (return_error("ft_ping: usage error: Only one host required"));
 	}
 	return (0);
 }
