@@ -60,7 +60,7 @@ bool	handle_error_packet( const struct ip *err_ip_packet, const struct icmp *err
 	if (get_hostname(buf_host, buf_ip) == 1)
 		return (1);
 
-	fprintf(stderr, "%ld bytes from %s: ", ret - 8, buf_ip);
+	fprintf(stderr, "%ld bytes from %s (%s): ", ret - sizeof(struct ip), buf_host, buf_ip);
 	
 	switch (err_icmp_packet->icmp_type)
 	{
