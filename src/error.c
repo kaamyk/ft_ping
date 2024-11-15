@@ -98,7 +98,7 @@ bool	handle_error_packet( const struct ip *err_ip_packet, const struct icmp *err
 			fprintf(stderr, "Address Mask Reply");
 			break ;
 		default :
-			printf("Unknown error code\n");
+			printf("%d: Unknown error code\n", err_icmp_packet->icmp_type);
 			break ;
 	}
 	if (g_flags & VERBOSE)

@@ -7,6 +7,9 @@ bool	parsing_flags( char *flag )
 		case 'v':
 			g_flags |= VERBOSE;
 			break ;
+		case '?':
+			print_usage();
+			return (1);
 		default:
 			fprintf(stderr, "ft_ping: parsing: %s: invalid flag\n", flag);
 			return (1);
@@ -57,28 +60,35 @@ bool	parsing_arguments( int *argc, char ***argv, data_s *utils )
 
 bool	parsing( int *argc, char ***argv, data_s *utils )
 {
-	while (*argc > 0 && ***argv == '-')
+	while (*argc > 0 && **argv)
 	{
-		++(**argv);
-		if ((***argv) != '-')
+		if (***argv != '-')
 		{
-			if (parsing_flags(**argv) == 1)
-				return (1);
+			if (utils->parameter == NULL)
+			{
+				utils->parameter = strdup(**argv);
+				if (utils->parameter == NULL)
+					return (return_error("ft_ping: parsing: allocation error"));
+			}
+			else
+				return (return_error("ft_ping: usage error: Only one host required"));
 		}
 		else
 		{
-			if (parsing_arguments(argc, argv, utils) == 1)
-				return (1);
+			++(**argv);
+			if ((***argv) != '-')
+			{
+				if (parsing_flags(**argv) == 1)
+					return (1);
+			}
+			else
+			{
+				if (parsing_arguments(argc, argv, utils) == 1)
+					return (1);
+			}
 		}
 		--(*argc);
 		++(*argv);
-	}
-	if (*argc != 1)
-	{
-		if (*argc < 1)
-			return (return_error("ft_ping: usage error: missing host operand"));
-		else if (*argc > 1)
-			return (return_error("ft_ping: usage error: Only one host required"));
 	}
 	return (0);
 }

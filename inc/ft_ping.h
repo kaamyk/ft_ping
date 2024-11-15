@@ -90,6 +90,7 @@ void	set_signal( void );
 //		PRINT.C
 void	print_end( data_s *utils );
 void	print_sequence( ssize_t *ret, struct ip *r_ip, struct icmp *r_icmp, data_s *utils, struct timespec *time_elapsed );
+void	print_usage( void );
 
 //		UTILS.C
 double	get_time_in_ms( struct timespec *time );
@@ -99,7 +100,7 @@ void	free_clocks( struct timespec **times);
 void	update_time( data_s *utils, struct timespec **times);
 void	end_program( data_s *utils, int *sockfd, struct sockaddr_in *to );
 bool	get_str_ip_addr( char *ret_buf, const struct in_addr *src_addr );
-bool	check_id ( char *r_buf, data_s *utils, struct ip *r_ip );
+bool	check_id ( const char *r_buf, data_s *utils, struct ip *r_ip );
 
 //		ERROR.C
 bool	return_error( char *err_mess );

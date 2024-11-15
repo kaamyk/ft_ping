@@ -73,3 +73,9 @@ void	print_sequence( ssize_t *ret, struct ip *r_ip, struct icmp *r_icmp, data_s 
 	printf("%ld bytes from %s: icmp_seq=%hu ttl=%d time=%.3f ms\n", 
 			*ret - sizeof(struct iphdr), buf_ip, htons(r_icmp->icmp_seq), r_ip->ip_ttl, get_time_in_ms(time_elapsed));
 }
+
+void	print_usage( void )
+{
+	printf("Usage: sudo ./ft_ping [flags/argumments] host\n");
+	printf("-v:		Verbose output\n--ttl N:	Specify N as time-to-live\n-?:		Give you this help list\n");
+}

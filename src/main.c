@@ -50,15 +50,12 @@ bool	dns_lookup( char *input_addr, struct sockaddr_in *to, data_s *utils )
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	
-	int status = getaddrinfo(input_addr, NULL, &hints, &res);
+	int status = getaddrinfo(utils->parameter, NULL, &hints, &res);
 	if (status != 0)
 	{
 		fprintf(stderr, "ft_ping: %s: %s\n", input_addr, gai_strerror(status));
 		return (1);
 	}
-	utils->parameter = strdup(input_addr);
-	if (utils->parameter == NULL)
-		return_error("ft_ping: strdup");
 	to->sin_family = AF_INET;
 	to->sin_port = htons(0);
 	to->sin_addr = ((struct sockaddr_in *)(res->ai_addr))->sin_addr;
@@ -102,14 +99,56 @@ void	init_packet( packet_s *packet, data_s *utils )
 	packet->msg[sizeof(packet->msg) - 1] = 0;
 }
 
+bool	handle_return_packet( ssize_t ret, const char *r_buf, data_s *utils, struct timespec *times[3] )
+{
+	struct ip	*r_ip = NULL;
+	struct icmp	*r_icmp = NULL;
+
+	r_ip = (struct ip *) r_buf;
+	r_icmp = (struct icmp *)(r_buf + sizeof(struct iphdr));
+	char	buf_ip[INET_ADDRSTRLEN] = {0};
+	if (get_str_ip_addr(buf_ip, &r_ip->ip_src) == 1)
+	{
+		free_clocks(times);
+		return (1);
+	}
+	if (strcmp(utils->ip_addr, buf_ip) == 0)
+		utils->msg_recv += 1;
+
+	if (r_icmp->icmp_type != 8)
+	{
+		if (r_icmp->icmp_type != 0)
+		{
+			if (get_str_ip_addr(buf_ip, &r_ip->ip_src) == 1)
+			{
+				free_clocks(times);
+				return (1);	
+			}
+			// printf("utils->hostname == %s", utils->hostname);
+			if (strcmp(utils->hostname, "localhost") != 0 && check_id(r_buf, utils, r_ip) == 1)
+			{
+				free_clocks(times);
+				fprintf(stderr, "ft_ping: check_id: IDs do not match.\n");
+				return (1);
+			}	
+			handle_error_packet(r_ip, r_icmp, r_buf, ret);
+		}
+		else
+		{
+			update_time(utils, times);
+			print_sequence( &ret, r_ip, r_icmp, utils, times[2]);
+		}
+		sleep(1);
+	}
+	return (0);
+}
+
 bool	send_ping( int *sockfd, struct sockaddr_in *to, data_s *utils )
 {
 	char	r_buf[84] = {0};
 	ssize_t	ret = 0;
 	struct timespec	*times[3];	// 0: start, 1: end, 2: elapsed
 	init_clocks(times);
-	struct ip	*r_ip = NULL;
-	struct icmp	*r_icmp = NULL;
 	packet_s	packet;
 
 	while (g_looping)
@@ -144,39 +183,8 @@ bool	send_ping( int *sockfd, struct sockaddr_in *to, data_s *utils )
 			continue ;
 		}
 		clock_gettime(CLOCK_MONOTONIC, times[1]);
-		r_ip = (struct ip *) r_buf;
-		r_icmp = (struct icmp *)(r_buf + sizeof(struct iphdr));
-		char	buf_ip[INET_ADDRSTRLEN] = {0};
-		if (get_str_ip_addr(buf_ip, &r_ip->ip_src) == 1)
-		{
-			free_clocks(times);
+		if (handle_return_packet( ret, r_buf, utils, times) == 1)
 			return (1);
-		}
-		if (strcmp(utils->ip_addr, buf_ip) == 0)
-			utils->msg_recv += 1;
-
-		if (r_icmp->icmp_type != 0)
-		{
-			if (get_str_ip_addr(buf_ip, &r_ip->ip_src) == 1)
-			{
-				free_clocks(times);
-				return (1);	
-			}
-			if (check_id(r_buf, utils, r_ip) == 1)
-			{
-				free_clocks(times);
-				fprintf(stderr, "ft_ping: check_id: IDs do not match.\n");
-				return (1);
-			}	
-			handle_error_packet(r_ip, r_icmp, r_buf, ret);
-		}
-		else
-		{
-			update_time(utils, times);
-			print_sequence( &ret, r_ip, r_icmp, utils, times[2]);
-		}
-
-		sleep(1);
 	}
 	clock_gettime(CLOCK_MONOTONIC, &(utils->t_finish));
 	print_end(utils);
