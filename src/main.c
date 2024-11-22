@@ -210,7 +210,6 @@ int	main ( int argc, char **argv )
 		end_program(&utils, NULL, to);		
 		exit(exit_value);
 	}
-	srand(time(NULL));
 
 	exit_value = dns_lookup(argv[0], to, &utils);
 	if (exit_value != 0)
