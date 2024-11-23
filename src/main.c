@@ -41,7 +41,7 @@ bool	reverse_dns_lookup( char *ip_addr, data_s *utils )
 	return (0);
 }
 
-bool	dns_lookup( char *input_addr, struct sockaddr_in *to, data_s *utils )
+bool	dns_lookup( struct sockaddr_in *to, data_s *utils )
 {
 	struct addrinfo		*res = NULL,
 						hints;
@@ -53,7 +53,7 @@ bool	dns_lookup( char *input_addr, struct sockaddr_in *to, data_s *utils )
 	int status = getaddrinfo(utils->parameter, NULL, &hints, &res);
 	if (status != 0)
 	{
-		fprintf(stderr, "ft_ping: %s: %s\n", input_addr, gai_strerror(status));
+		fprintf(stderr, "ft_ping: %s: %s\n", utils->parameter, gai_strerror(status));
 		return (1);
 	}
 	to->sin_family = AF_INET;
@@ -211,7 +211,7 @@ int	main ( int argc, char **argv )
 		exit(exit_value);
 	}
 
-	exit_value = dns_lookup(argv[0], to, &utils);
+	exit_value = dns_lookup(to, &utils);
 	if (exit_value != 0)
 	{
 		end_program(&utils, NULL, to);

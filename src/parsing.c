@@ -90,5 +90,7 @@ bool	parsing( int *argc, char ***argv, data_s *utils )
 		--(*argc);
 		++(*argv);
 	}
+	if (utils->parameter == NULL)
+		return(return_error("ft_ping: usage error: No host"));
 	return (0);
 }
